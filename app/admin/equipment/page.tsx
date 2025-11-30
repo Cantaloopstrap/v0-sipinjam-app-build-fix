@@ -124,7 +124,7 @@ export default function EquipmentManagementPage() {
           <h1 className="text-3xl font-bold">Kelola Barang</h1>
           <p className="text-muted-foreground">Kelola semua barang dalam sistem</p>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button onClick={handleAddNew} className="bg-orange-600 hover:bg-orange-700">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Barang
         </Button>

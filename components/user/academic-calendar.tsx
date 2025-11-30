@@ -1,70 +1,112 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { mockAcademicCalendar } from "@/lib/mock-data"
-import { CalendarDays, GraduationCap, PartyPopper, Download, Filter } from "lucide-react"
-import { format, isSameDay, isSameMonth } from "date-fns"
+import { Download } from "lucide-react"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek } from "date-fns"
 import { id } from "date-fns/locale"
 
+const MONTHS = [
+  "September 2025",
+  "Oktober 2025",
+  "November 2025",
+  "Desember 2025",
+  "Januari 2026",
+  "Februari 2026",
+  "Maret 2026",
+  "April 2026",
+  "Mei 2026",
+  "Juni 2026",
+  "Juli 2026",
+  "Agustus 2026",
+]
+
+const DAYS = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUM'AT", "SABTU"]
+
 export function AcademicCalendar() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [month, setMonth] = useState<Date>(new Date())
-  const [filterType, setFilterType] = useState<string | null>(null)
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0)
 
-  const filteredEvents = filterType
-    ? mockAcademicCalendar.filter((event) => event.type === filterType)
-    : mockAcademicCalendar
-
-  const eventsOnSelectedDate = selectedDate ? filteredEvents.filter((event) => isSameDay(event.date, selectedDate)) : []
-
-  const eventsInMonth = filteredEvents.filter((event) => isSameMonth(event.date, month))
-
-  const modifiers = {
-    holiday: filteredEvents.filter((e) => e.type === "holiday").map((e) => e.date),
-    exam: filteredEvents.filter((e) => e.type === "exam").map((e) => e.date),
-    event: filteredEvents.filter((e) => e.type === "event").map((e) => e.date),
+  const getEventForDate = (date: Date) => {
+    return mockAcademicCalendar.find((event) => isSameDay(event.date, date))
   }
 
-  const modifiersClassNames = {
-    holiday:
-      "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 font-semibold hover:bg-red-200 dark:hover:bg-red-900/50",
-    exam: "bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100 font-semibold hover:bg-orange-200 dark:hover:bg-orange-900/50",
-    event:
-      "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/50",
-  }
-
-  const getEventIcon = (type: string) => {
+  const getColorClass = (type: string) => {
     switch (type) {
       case "holiday":
-        return <PartyPopper className="h-4 w-4" />
+        return "bg-red-100 text-red-900 font-semibold"
       case "exam":
-        return <GraduationCap className="h-4 w-4" />
+        return "bg-orange-100 text-orange-900 font-semibold"
       case "event":
-        return <CalendarDays className="h-4 w-4" />
+        return "bg-blue-100 text-blue-900 font-semibold"
       default:
-        return <CalendarDays className="h-4 w-4" />
+        return ""
     }
   }
 
-  const getEventBadgeVariant = (type: string) => {
-    switch (type) {
-      case "holiday":
-        return "destructive"
-      case "exam":
-        return "default"
-      case "event":
-        return "secondary"
-      default:
-        return "outline"
+  const renderMonth = (monthStr: string) => {
+    const [monthName, year] = monthStr.split(" ")
+    const monthMap: { [key: string]: number } = {
+      September: 8,
+      Oktober: 9,
+      November: 10,
+      Desember: 11,
+      Januari: 0,
+      Februari: 1,
+      Maret: 2,
+      April: 3,
+      Mei: 4,
+      Juni: 5,
+      Juli: 6,
+      Agustus: 7,
     }
+
+    const month = new Date(Number.parseInt(year), monthMap[monthName], 1)
+    const start = startOfMonth(month)
+    const end = endOfMonth(month)
+
+    // Get the start of the week for the first day of the month
+    const calendarStart = startOfWeek(start, { weekStartsOn: 0 })
+    // Get the end of the week for the last day of the month
+    const calendarEnd = endOfWeek(end, { weekStartsOn: 0 })
+
+    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
+
+    return (
+      <Card key={monthStr} className="p-4">
+        <h3 className="text-center font-bold text-lg mb-3 uppercase">{monthStr}</h3>
+        <div className="grid grid-cols-7 gap-1">
+          {DAYS.map((day) => (
+            <div key={day} className="text-center text-xs font-bold py-1 bg-muted">
+              {day}
+            </div>
+          ))}
+          {days.map((day, idx) => {
+            const event = getEventForDate(day)
+            const isCurrentMonth = day.getMonth() === start.getMonth()
+
+            return (
+              <div
+                key={idx}
+                className={`
+                  aspect-square flex items-center justify-center text-sm border
+                  ${!isCurrentMonth ? "text-muted-foreground/30" : ""}
+                  ${event ? getColorClass(event.type) : "hover:bg-accent"}
+                `}
+                title={event ? event.title : ""}
+              >
+                {format(day, "d")}
+              </div>
+            )
+          })}
+        </div>
+      </Card>
+    )
   }
 
   const handleDownloadCalendar = () => {
-    const calendarText = eventsInMonth
+    const calendarText = mockAcademicCalendar
       .map((event) => `${format(event.date, "dd/MM/yyyy", { locale: id })} - ${event.title} (${event.type})`)
       .join("\n")
 
@@ -72,149 +114,112 @@ export function AcademicCalendar() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `kalender-akademik-${format(month, "MMMM-yyyy", { locale: id })}.txt`
+    a.download = `kalender-akademik-2025-2026.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
-          <Button variant={filterType === null ? "default" : "outline"} size="sm" onClick={() => setFilterType(null)}>
-            <Filter className="h-4 w-4" />
-            Semua
-          </Button>
-          <Button
-            variant={filterType === "holiday" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("holiday")}
-            className={filterType === "holiday" ? "bg-red-600 hover:bg-red-700" : ""}
-          >
-            <PartyPopper className="h-4 w-4" />
-            Libur
-          </Button>
-          <Button
-            variant={filterType === "exam" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("exam")}
-            className={filterType === "exam" ? "bg-orange-600 hover:bg-orange-700" : ""}
-          >
-            <GraduationCap className="h-4 w-4" />
-            Ujian
-          </Button>
-          <Button
-            variant={filterType === "event" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("event")}
-          >
-            <CalendarDays className="h-4 w-4" />
-            Acara
-          </Button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">KALENDER AKADEMIK TA. 2025/2026</h2>
+          <p className="text-sm text-muted-foreground mt-1">Sekolah Tinggi Teknologi Bontang</p>
         </div>
         <Button variant="outline" size="sm" onClick={handleDownloadCalendar}>
-          <Download className="h-4 w-4" />
+          <Download className="mr-2 h-4 w-4" />
           Unduh Kalender
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold">Kalender Akademik</h3>
-            <p className="text-sm text-muted-foreground">Pilih tanggal untuk melihat detail acara</p>
+      {/* Legend */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">Keterangan:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded bg-red-100 border border-red-300" />
+            <span className="text-sm">Libur/Hari Besar</span>
           </div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            month={month}
-            onMonthChange={setMonth}
-            locale={id}
-            modifiers={modifiers}
-            modifiersClassNames={modifiersClassNames}
-            className="rounded-md border w-full"
-          />
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded bg-orange-100 border border-orange-300" />
+            <span className="text-sm">Periode Ujian</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded bg-blue-100 border border-blue-300" />
+            <span className="text-sm">Acara Kampus</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded bg-green-100 border border-green-300" />
+            <span className="text-sm">Periode Kuliah</span>
+          </div>
+        </div>
+      </Card>
 
-          <div className="mt-6 pt-6 border-t">
-            <h4 className="text-sm font-semibold mb-3">Keterangan</h4>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="text-xs">Libur/Hari Besar</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-orange-500" />
-                <span className="text-xs">Periode Ujian</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500" />
-                <span className="text-xs">Acara Kampus</span>
-              </div>
+      {/* Calendar Grid - Show all 12 months */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{MONTHS.map(renderMonth)}</div>
+
+      {/* Semester Information */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="p-6">
+          <h3 className="font-bold text-lg mb-4">SEMESTER GANJIL 2025/2026</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Her Registrasi Mala:</span>
+              <span className="font-medium">1 – 4 Sept 2025</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Basic Study Skills MaBa:</span>
+              <span className="font-medium">4 – 6 Sept 2025</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Perkuliahan:</span>
+              <span className="font-medium">15 Sept – 26 Des 2025</span>
+            </div>
+            <div className="flex justify-between">
+              <span>UTS:</span>
+              <span className="font-medium">3 – 7 Nov 2025</span>
+            </div>
+            <div className="flex justify-between">
+              <span>UAS:</span>
+              <span className="font-medium">5 – 9 Jan 2026</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Wisuda:</span>
+              <span className="font-medium">November 2025</span>
             </div>
           </div>
         </Card>
 
-        <div className="space-y-4">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedDate ? format(selectedDate, "dd MMMM yyyy", { locale: id }) : "Pilih Tanggal"}
-            </h3>
-
-            {eventsOnSelectedDate.length > 0 ? (
-              <div className="space-y-3">
-                {eventsOnSelectedDate.map((event, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 rounded-lg border p-3 bg-accent/30 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="mt-0.5">{getEventIcon(event.type)}</div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm leading-relaxed">{event.title}</p>
-                      <Badge variant={getEventBadgeVariant(event.type)} className="mt-2">
-                        {event.type === "holiday" && "Libur"}
-                        {event.type === "exam" && "Ujian"}
-                        {event.type === "event" && "Acara"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">Tidak ada acara pada tanggal ini</p>
-              </div>
-            )}
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Ringkasan {format(month, "MMMM yyyy", { locale: id })}</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-                <div className="flex items-center gap-2">
-                  <PartyPopper className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium">Libur</span>
-                </div>
-                <Badge variant="secondary">{eventsInMonth.filter((e) => e.type === "holiday").length}</Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium">Ujian</span>
-                </div>
-                <Badge variant="secondary">{eventsInMonth.filter((e) => e.type === "exam").length}</Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Acara</span>
-                </div>
-                <Badge variant="secondary">{eventsInMonth.filter((e) => e.type === "event").length}</Badge>
-              </div>
+        <Card className="p-6">
+          <h3 className="font-bold text-lg mb-4">SEMESTER GENAP 2025/2026</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Her Registrasi:</span>
+              <span className="font-medium">2 Feb – 6 Feb 2026</span>
             </div>
-          </Card>
-        </div>
+            <div className="flex justify-between">
+              <span>Perkuliahan Tahap 1:</span>
+              <span className="font-medium">9 Feb – 13 Feb 2026</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Libur Ramadhan:</span>
+              <span className="font-medium">16 Feb – 3 Apr 2026</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Perkuliahan Tahap 2:</span>
+              <span className="font-medium">6 Apr – 10 Jul 2026</span>
+            </div>
+            <div className="flex justify-between">
+              <span>UTS:</span>
+              <span className="font-medium">18 – 22 Mei 2026</span>
+            </div>
+            <div className="flex justify-between">
+              <span>UAS:</span>
+              <span className="font-medium">20 – 24 Jul 2026</span>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   )

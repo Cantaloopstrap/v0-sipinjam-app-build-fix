@@ -119,7 +119,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold tracking-tight">Kelola User</h1>
           <p className="text-muted-foreground">Manajemen user dan hak akses sistem</p>
         </div>
-        <Button onClick={handleAddNew} size="lg" className="px-6">
+        <Button onClick={handleAddNew} size="lg" className="px-6 bg-orange-600 hover:bg-orange-700">
           <Plus className="mr-2 h-4 w-4" />
           Tambah User
         </Button>
