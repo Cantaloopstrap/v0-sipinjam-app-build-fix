@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { LoginForm } from "@/components/auth/login-form"
-import { Building2, BookCheck } from "lucide-react"
+import { BookCheck } from "lucide-react"
 import type { UserRole } from "@/lib/types"
+// Added Image import from Next.js for optimized logo rendering
+import Image from "next/image"
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>("user")
@@ -42,13 +44,10 @@ export default function LoginPage() {
 
         {/* Content Overlay */}
         <div className="relative z-10 flex flex-col items-start justify-between p-12 text-white w-full">
+          {/* Replaced icon-based logo with SD logo image */}
           <div className="flex items-center gap-3">
-            <div
-              className={`p-3 rounded-xl transition-all duration-500 ${
-                selectedRole === "user" ? "bg-blue-500" : "bg-orange-500"
-              }`}
-            >
-              <Building2 className="w-8 h-8" />
+            <div className="p-3 rounded-xl bg-white/10">
+              <Image src="/sipinjam-logo.png" alt="SIPINJAM Logo" width={48} height={48} className="object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">SIPINJAM</h1>
@@ -87,14 +86,10 @@ export default function LoginPage() {
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
-          {/* Mobile Logo */}
+          {/* Replaced mobile icon logo with SD logo image */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div
-              className={`p-2 rounded-lg transition-all duration-500 ${
-                selectedRole === "user" ? "bg-blue-600" : "bg-orange-600"
-              }`}
-            >
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="p-2 rounded-lg bg-white/10 border border-border">
+              <Image src="/sipinjam-logo.png" alt="SIPINJAM Logo" width={32} height={32} className="object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold">SIPINJAM</h1>

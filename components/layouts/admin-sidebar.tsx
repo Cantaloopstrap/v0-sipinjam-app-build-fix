@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Settings } from "lucide-react"
+import Image from "next/image"
 
 const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -81,10 +82,8 @@ export function AdminSidebar() {
         aria-label="Admin navigation sidebar"
       >
         <div className="flex h-16 items-center justify-center border-b border-white/10 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SI</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <Image src="/sipinjam-logo.png" alt="SIPINJAM Logo" width={40} height={40} className="object-contain" />
             <h1 className="text-2xl font-bold">SIPINJAM</h1>
           </div>
         </div>
