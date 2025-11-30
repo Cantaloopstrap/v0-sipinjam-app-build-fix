@@ -1,0 +1,77 @@
+"use client"
+
+import type React from "react"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { UserSidebar } from "@/components/layouts/user-sidebar"
+import { UserAvatarDropdown } from "@/components/layouts/user-avatar-dropdown"
+import { Footer } from "@/components/layouts/footer"
+import { ThemeProvider } from "@/components/providers/theme-provider"
+import type { User } from "@/lib/types"
+
+export default function UserLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const authData = localStorage.getItem("sipinjam_auth")
+    if (!authData) {
+      router.push("/login")
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(authData)
+      if (parsed.role !== "user") {
+        router.push("/login")
+        return
+      }
+      setUser(parsed)
+    } catch (error) {
+      router.push("/login")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--user-primary)] border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
+  return (
+    <ThemeProvider>
+      <div className="flex h-screen overflow-hidden">
+        <UserSidebar />
+
+        <div className="flex flex-1 flex-col lg:ml-64">
+          {/* Header */}
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+            <div className="ml-12 lg:ml-0">
+              <h2 className="text-xl font-semibold">User Portal</h2>
+            </div>
+            <UserAvatarDropdown user={user} />
+          </header>
+
+          {/* Main content */}
+          <main className="flex-1 overflow-y-auto">{children}</main>
+
+          <Footer />
+        </div>
+      </div>
+    </ThemeProvider>
+  )
+}
